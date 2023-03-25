@@ -1,6 +1,6 @@
 // entity = tabla de la base de datos
 
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Product {
@@ -45,4 +45,19 @@ export class Product {
 
   // tags
   // images
+
+  // Acción a ejecutar antes de la inserción
+  @BeforeInsert()
+  checkSlugInsert() {
+    if (!this.slug) {
+      this.slug = this.title;
+    }
+
+    this.slug = this.slug
+      .toLowerCase()
+      .replaceAll(' ', '_')
+      .replaceAll("'", '');
+  }
+
+  // @BeforeUpdate()
 }
