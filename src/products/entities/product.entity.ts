@@ -1,6 +1,12 @@
 // entity = tabla de la base de datos
 
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Product {
@@ -59,5 +65,12 @@ export class Product {
       .replaceAll("'", '');
   }
 
-  // @BeforeUpdate()
+  // Acción a ejecutar antes de actualizar
+  @BeforeUpdate()
+  checkSlugUpdate() {
+    this.slug = this.slug
+      .toLowerCase()
+      .replaceAll(' ', '_')
+      .replaceAll("'", '');
+  }
 }
