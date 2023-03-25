@@ -8,10 +8,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Repository } from 'typeorm';
+import { validate as isUUID } from 'uuid';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
-
 @Injectable()
 export class ProductsService {
   // Mostrar mensajes de logs
@@ -62,13 +62,27 @@ export class ProductsService {
     return products;
   }
 
-  async findOne(id: string) {
-    const product = await this.productRepository.findOneBy({
-      id,
-    });
+  async findOne(term: string) {
+    let product: Product;
+
+    if (isUUID(term)) {
+      product = await this.productRepository.findOneBy({
+        id: term,
+      });
+    } else {
+      const queryBuilder = this.productRepository.createQueryBuilder();
+      product = await queryBuilder
+        // Al utilizar la función UPPER se pierde el índice
+        .where('UPPER(title) = :title or slug = :slug', {
+          // :title | :slug argumentos a proporcionar
+          title: term.toUpperCase(),
+          slug: term.toLowerCase(),
+        })
+        .getOne();
+    }
 
     if (!product)
-      throw new NotFoundException(`Product with id ${id} not found`);
+      throw new NotFoundException(`Product with term ${term} not found`);
 
     return product;
   }
