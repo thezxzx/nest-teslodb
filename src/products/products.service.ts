@@ -50,6 +50,7 @@ export class ProductsService {
     }
   }
 
+  // TODO: Paginar
   async findAll() {
     const products = await this.productRepository.find();
     return products;
@@ -70,8 +71,10 @@ export class ProductsService {
     return `This action updates a #${id} product`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: string) {
+    const product = await this.findOne(id);
+    await this.productRepository.remove(product);
+    return;
   }
 
   private handleDBExceptions(error: any) {
