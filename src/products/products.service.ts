@@ -49,8 +49,9 @@ export class ProductsService {
     }
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll() {
+    const products = await this.productRepository.find();
+    return products;
   }
 
   findOne(id: number) {
