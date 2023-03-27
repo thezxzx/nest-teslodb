@@ -5,8 +5,10 @@ import {
   BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ProductImage } from './';
 
 @Entity()
 export class Product {
@@ -54,7 +56,16 @@ export class Product {
     default: [],
   })
   tags: string[];
+
   // images
+  @OneToMany(
+    () => ProductImage, // Relacionar con la tabla ProductImage
+    (productImage) => productImage.product, // Campo con el que se va a relacionar
+    {
+      cascade: true, // Operaciones en cascada | eliminación
+    },
+  )
+  images?: ProductImage;
 
   // Acción a ejecutar antes de la inserción
   @BeforeInsert()
