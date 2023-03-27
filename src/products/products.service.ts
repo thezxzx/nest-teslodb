@@ -60,9 +60,17 @@ export class ProductsService {
     const products = await this.productRepository.find({
       take: limit,
       skip: offset,
-      // TODO: Relaciones
+      // Obtener las relaciones de las imagenes
+      relations: {
+        images: true,
+      },
     });
-    return products;
+
+    // Modificar el mensaje de retorno para quitar el id de las imagenes
+    return products.map((product) => ({
+      ...product,
+      images: product.images.map((img) => img.url),
+    }));
   }
 
   async findOne(term: string) {
@@ -73,7 +81,8 @@ export class ProductsService {
         id: term,
       });
     } else {
-      const queryBuilder = this.productRepository.createQueryBuilder();
+      // prod = alias de la tabla
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
       product = await queryBuilder
         // Al utilizar la función UPPER se pierde el índice
         .where('UPPER(title) = :title or slug = :slug', {
@@ -81,6 +90,8 @@ export class ProductsService {
           title: term.toUpperCase(),
           slug: term.toLowerCase(),
         })
+        // relaciones con la imagen del producto | otro alias
+        .leftJoinAndSelect('prod.images', 'prodImages')
         .getOne();
     }
 
@@ -88,6 +99,15 @@ export class ProductsService {
       throw new NotFoundException(`Product with term ${term} not found`);
 
     return product;
+  }
+
+  // Nuevo método para buscar por término porque el otro no puede devolver un objeto plano porque lo utiliza el delete
+  async findOnePlain(term: string) {
+    const { images = [], ...product } = await this.findOne(term);
+    return {
+      ...product,
+      images: images.map((image) => image.url),
+    };
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
