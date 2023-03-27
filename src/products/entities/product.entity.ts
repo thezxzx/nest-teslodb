@@ -65,7 +65,7 @@ export class Product {
       cascade: true, // Operaciones en cascada | eliminación
     },
   )
-  images?: ProductImage;
+  images?: ProductImage[];
 
   // Acción a ejecutar antes de la inserción
   @BeforeInsert()

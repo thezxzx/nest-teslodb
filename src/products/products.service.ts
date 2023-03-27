@@ -11,35 +11,38 @@ import { Repository } from 'typeorm';
 import { validate as isUUID } from 'uuid';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Product } from './entities/product.entity';
+import { Product, ProductImage } from './entities';
 @Injectable()
 export class ProductsService {
   // Mostrar mensajes de logs
   private readonly logger = new Logger('ProductsService'); // Nombre de la clase
 
   constructor(
+    // Inyectar el Product
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    // Inyectar el ProductImage
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
     try {
-      // if (!createProductDto.slug) {
-      //   createProductDto.slug = createProductDto.title
-      //     .toLowerCase()
-      //     .replaceAll(' ', '_')
-      //     .replaceAll("'", '');
-      // } else {
-      //   createProductDto.slug = createProductDto.slug
-      //     .toLowerCase()
-      //     .replaceAll(' ', '_')
-      //     .replaceAll("'", '');
-      // }
+      // Desestructurar las imagenes con un arreglo vacío por defecto
+      const { images = [], ...productDetails } = createProductDto;
 
-      const product = this.productRepository.create(createProductDto); // Crear instancia del producto
+      const product = this.productRepository.create({
+        ...productDetails,
+        // Crear instancia de las imagenes, cada una tendrá el ID del producto con el que del que se vayan creando como referencia
+        images: images.map((image) =>
+          this.productImageRepository.create({ url: image }),
+        ),
+      }); // Crear instancia del producto
       await this.productRepository.save(product); // Guardar en la base de datos
 
-      return product;
+      // Devolver las imagenes en el mismo formato a como se recibieron (sin el id)
+      return { ...product, images: images };
     } catch (error) {
       this.handleDBExceptions(error);
       // if (error.code === '23505') throw new BadRequestException(error.detail);
@@ -91,6 +94,7 @@ export class ProductsService {
     const product = await this.productRepository.preload({
       id, // Obtener producto por id
       ...updateProductDto, // Colocar las propiedades del dto
+      images: [], // TODO: Arreglar
     });
 
     if (!product)
