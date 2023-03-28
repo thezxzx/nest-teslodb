@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { validate as isUUID } from 'uuid';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -25,6 +25,8 @@ export class ProductsService {
     // Inyectar el ProductImage
     @InjectRepository(ProductImage)
     private readonly productImageRepository: Repository<ProductImage>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -111,19 +113,55 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
+    const { images, ...toUpdate } = updateProductDto;
+
     const product = await this.productRepository.preload({
       id, // Obtener producto por id
-      ...updateProductDto, // Colocar las propiedades del dto
-      images: [], // TODO: Arreglar
+      ...toUpdate, // Colocar las propiedades del dto
     });
 
     if (!product)
       throw new NotFoundException(`Product with id: ${id} not found`);
 
+    // Create query runner
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    // Conectar a la base de datos
+    await queryRunner.connect();
+
+    // Iniciar transacción
+    await queryRunner.startTransaction();
+
     try {
-      await this.productRepository.save(product);
-      return product;
+      // Borrar imagenes
+      if (images) {
+        // entidad a afectar, campo de la entidad, valor del campo
+        // delete * from ProductImage where productId == id;
+        await queryRunner.manager.delete(ProductImage, { product: { id } });
+
+        product.images = images.map((image) =>
+          this.productImageRepository.create({ url: image }),
+        );
+      }
+      // else {
+      //   product.images = await this.productImageRepository.findBy({ product: {id} })
+      // }
+
+      await queryRunner.manager.save(product);
+
+      // Aplicar cambios
+      await queryRunner.commitTransaction();
+
+      // liberar el queryRunner
+      await queryRunner.release();
+
+      // await this.productRepository.save(product);
+      return this.findOnePlain(id);
     } catch (error) {
+      // Regresar al estado anterior en casod e error
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
       this.handleDBExceptions(error);
     }
   }
