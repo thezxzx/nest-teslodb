@@ -10,5 +10,6 @@ import { ProductsService } from './products.service';
   imports: [
     TypeOrmModule.forFeature([Product, ProductImage]), // entidades que el modulo esta definiendo
   ],
+  exports: [ProductsService, TypeOrmModule],
 })
 export class ProductsModule {}
