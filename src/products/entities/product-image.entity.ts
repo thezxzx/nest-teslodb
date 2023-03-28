@@ -12,6 +12,9 @@ export class ProductImage {
   @ManyToOne(
     () => Product, // Relacionar con la tabla Product
     (product) => product.images, // Campo con el que se va a relacionar
+    {
+      onDelete: 'CASCADE', // Eliminar en cascada
+    },
   )
   product: Product;
 }
