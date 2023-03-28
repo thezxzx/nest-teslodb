@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { ProductImage } from './';
 
-@Entity()
+@Entity({ name: 'products' })
 export class Product {
   // Id de la tabla
   @PrimaryGeneratedColumn('uuid')
