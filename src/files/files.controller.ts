@@ -8,7 +8,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { FilesService } from './files.service';
-import { fileFilter } from './helpers/fileFilter.helper';
+import { fileFilter, fileNamer } from './helpers/';
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
@@ -20,11 +20,12 @@ export class FilesController {
       // limits: { fieldSize: 10000 }
       storage: diskStorage({
         destination: './static/uploads', //  Ubicación de la carpeta donde se guardarán los archivos
+        filename: fileNamer,
       }),
     }),
   )
   uploadProductImage(@UploadedFile() file: Express.Multer.File) {
-    console.log({ fileInController: file });
+    console.log(file);
 
     if (!file)
       throw new BadRequestException('Make sure that the file is an image');
