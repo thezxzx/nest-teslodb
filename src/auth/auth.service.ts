@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
@@ -17,16 +18,25 @@ export class AuthService {
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const user = this.userRepository.create(createUserDto);
+      const { password, ...userData } = createUserDto;
+
+      const user = this.userRepository.create({
+        ...userData,
+        password: bcrypt.hashSync(password, 10) /* encriptar contraseña */,
+      });
       await this.userRepository.save(user);
 
+      delete user.password;
+
       return user;
+
+      // TODO: Retornar el JWT de acceso
     } catch (error) {
       this.handleDbErrors(error);
     }
   }
 
-  private handleDbErrors(error: any) {
+  private handleDbErrors(error: any): never {
     if (error.code === '23505') {
       throw new BadRequestException(error.detail);
     }
