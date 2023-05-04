@@ -14,9 +14,11 @@ export class User {
   password: string;
 
   @Column('text')
-  fullname: string;
+  fullName: string;
 
-  @Column('bool')
+  @Column('bool', {
+    default: true,
+  })
   isActive: boolean; // No eliminar usuarios físicametne de la base de datos, cambiar el activo a falso
 
   @Column('text', {
