@@ -35,7 +35,7 @@ export class AuthService {
 
       return {
         ...user,
-        token: this.getJwtToken({ email: user.email }),
+        token: this.getJwtToken({ id: user.id }),
       };
     } catch (error) {
       this.handleDbErrors(error);
@@ -47,7 +47,7 @@ export class AuthService {
     const { password, email } = loginUserDto;
     const user = await this.userRepository.findOne({
       where: { email }, // Buscar por correo
-      select: { email: true, password: true }, // Obtener solo los campos que necesitamos
+      select: { email: true, password: true, id: true }, // Obtener solo los campos que necesitamos
     });
 
     if (!user) {
@@ -61,7 +61,7 @@ export class AuthService {
 
     return {
       ...user,
-      token: this.getJwtToken({ email: user.email }),
+      token: this.getJwtToken({ id: user.id }),
     };
   }
 
