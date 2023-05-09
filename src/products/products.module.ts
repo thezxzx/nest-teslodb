@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from 'src/auth/auth.module';
 import { Product, ProductImage } from './entities';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
@@ -9,6 +10,7 @@ import { ProductsService } from './products.service';
   providers: [ProductsService],
   imports: [
     TypeOrmModule.forFeature([Product, ProductImage]), // entidades que el modulo esta definiendo
+    AuthModule,
   ],
   exports: [ProductsService, TypeOrmModule],
 })
