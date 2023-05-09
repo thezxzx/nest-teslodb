@@ -6,9 +6,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { DataSource, Repository } from 'typeorm';
 import { validate as isUUID } from 'uuid';
+import { User } from '../auth/entities/user.entity';
+import { PaginationDto } from '../common/dtos/pagination.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product, ProductImage } from './entities';
@@ -29,7 +30,7 @@ export class ProductsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, user: User) {
     try {
       // Desestructurar las imagenes con un arreglo vacío por defecto
       const { images = [], ...productDetails } = createProductDto;
@@ -40,6 +41,7 @@ export class ProductsService {
         images: images.map((image) =>
           this.productImageRepository.create({ url: image }),
         ),
+        user,
       }); // Crear instancia del producto
       await this.productRepository.save(product); // Guardar en la base de datos
 
@@ -112,7 +114,7 @@ export class ProductsService {
     };
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto, user: User) {
     const { images, ...toUpdate } = updateProductDto;
 
     const product = await this.productRepository.preload({
@@ -146,7 +148,7 @@ export class ProductsService {
       // else {
       //   product.images = await this.productImageRepository.findBy({ product: {id} })
       // }
-
+      product.user = user; // Asignar el usuario actual al producto
       await queryRunner.manager.save(product);
 
       // Aplicar cambios
