@@ -1,5 +1,6 @@
 // entity = tabla de la base de datos
 
+import { ApiProperty } from '@nestjs/swagger';
 import {
   BeforeInsert,
   BeforeUpdate,
@@ -15,6 +16,7 @@ import { ProductImage } from './';
 @Entity({ name: 'products' })
 export class Product {
   // Id de la tabla
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -22,41 +24,49 @@ export class Product {
   @Column('text', {
     unique: true,
   })
+  @ApiProperty()
   title: string;
 
   @Column('float', {
     default: 0,
   })
+  @ApiProperty()
   price: number;
 
   @Column({
     type: 'text',
     nullable: true,
   })
+  @ApiProperty()
   description: string;
 
   @Column('text', {
     unique: true,
   })
+  @ApiProperty()
   slug: string;
 
   @Column('int', {
     default: 0,
   })
+  @ApiProperty()
   stock: number;
 
   @Column('text', {
     array: true,
   })
+  @ApiProperty()
   sizes: string[];
 
   @Column('text')
+  @ApiProperty()
   gender: string;
 
   @Column('text', {
     array: true,
     default: [],
   })
+  @ApiProperty()
   tags: string[];
 
   // Relación
@@ -69,6 +79,7 @@ export class Product {
       eager: true, // Cada vez que se use el método find va a cargar las relaciones
     },
   )
+  @ApiProperty()
   images?: ProductImage[];
 
   @ManyToOne(() => User, (user) => user.product, { eager: true })
