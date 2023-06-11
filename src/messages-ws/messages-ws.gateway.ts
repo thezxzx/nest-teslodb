@@ -1,3 +1,4 @@
+import { JwtService } from '@nestjs/jwt';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -6,6 +7,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtPayload } from 'src/auth/interfaces';
 import { NewMessageDto } from './dtos/new-message.dto';
 import { MessagesWsService } from './messages-ws.service';
 
@@ -15,11 +17,22 @@ export class MessagesWsGateway
 {
   @WebSocketServer() wss: Server;
 
-  constructor(private readonly messagesWsService: MessagesWsService) {}
+  constructor(
+    private readonly messagesWsService: MessagesWsService,
+    private jwtService: JwtService,
+  ) {}
 
   handleConnection(client: Socket) {
     const token = client.handshake.headers.authentication as string;
-    console.log({ token });
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(token);
+    } catch (error) {
+      client.disconnect();
+      return;
+    }
+
+    console.log({ payload });
     this.messagesWsService.registerClient(client);
 
     this.wss.emit(
